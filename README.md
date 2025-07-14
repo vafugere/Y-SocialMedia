@@ -33,6 +33,7 @@
 5. **Sample data**
     - Username = any user's first name
     - Password = admin
-**Example login**
+
+   **Example login**
     - emma
     - admin
