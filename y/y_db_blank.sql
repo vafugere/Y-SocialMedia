@@ -30,10 +30,11 @@ CREATE TABLE `follows` (
   `to_id` int(11) NOT NULL,
   PRIMARY KEY (`follow_id`),
   KEY `FK_follows` (`from_id`),
-  KEY `FK_follows2` (`to_id`),
-  CONSTRAINT `FK_follows` FOREIGN KEY (`from_id`) REFERENCES `users` (`user_id`),
-  CONSTRAINT `FK_follows2` FOREIGN KEY (`to_id`) REFERENCES `users` (`user_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci CHECKSUM=1 DELAY_KEY_WRITE=1 ROW_FORMAT=DYNAMIC;
+  KEY `FK_follows_from_id_idx` (`from_id`),
+  KEY `FK_follows_to_id_idx` (`to_id`),
+  CONSTRAINT `FK_follows_from_id` FOREIGN KEY (`from_id`) REFERENCES `users` (`user_id`) ON DELETE NO ACTION ON UPDATE NO ACTION,
+  CONSTRAINT `FK_follows_to_id` FOREIGN KEY (`to_id`) REFERENCES `users` (`user_id`) ON DELETE NO ACTION ON UPDATE NO ACTION
+) ENGINE=InnoDB AUTO_INCREMENT=38 DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci CHECKSUM=1 DELAY_KEY_WRITE=1 ROW_FORMAT=DYNAMIC;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -54,15 +55,15 @@ DROP TABLE IF EXISTS `likes`;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `likes` (
   `like_id` int(11) NOT NULL AUTO_INCREMENT,
-  `tweet_id` int(11) NOT NULL,
+  `post_id` int(11) NOT NULL,
   `user_id` int(11) NOT NULL,
   `date_created` timestamp NOT NULL DEFAULT current_timestamp(),
   PRIMARY KEY (`like_id`),
-  KEY `FK_tweet_id_idx` (`tweet_id`),
-  KEY `FK_user_id_idx` (`user_id`),
-  CONSTRAINT `FK_tweet_id` FOREIGN KEY (`tweet_id`) REFERENCES `tweets` (`tweet_id`) ON DELETE NO ACTION ON UPDATE NO ACTION,
-  CONSTRAINT `FK_user_id` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE NO ACTION ON UPDATE NO ACTION
-) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+  KEY `FK_likes_post_id_idx` (`post_id`),
+  KEY `FK_likes_user_id_idx` (`user_id`),
+  CONSTRAINT `FK_likes_post_id` FOREIGN KEY (`post_id`) REFERENCES `posts` (`post_id`) ON DELETE NO ACTION ON UPDATE NO ACTION,
+  CONSTRAINT `FK_likes_user_id` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE NO ACTION ON UPDATE NO ACTION
+) ENGINE=InnoDB AUTO_INCREMENT=54 DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -75,32 +76,33 @@ LOCK TABLES `likes` WRITE;
 UNLOCK TABLES;
 
 --
--- Table structure for table `tweets`
+-- Table structure for table `posts`
 --
 
-DROP TABLE IF EXISTS `tweets`;
+DROP TABLE IF EXISTS `posts`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `tweets` (
-  `tweet_id` int(11) NOT NULL AUTO_INCREMENT,
-  `tweet_text` varchar(280) NOT NULL,
-  `user_id` int(11) DEFAULT NULL,
-  `original_tweet_id` int(11) NOT NULL DEFAULT 0,
-  `reply_to_tweet_id` int(11) NOT NULL DEFAULT 0,
+CREATE TABLE `posts` (
+  `post_id` int(11) NOT NULL AUTO_INCREMENT,
+  `post_text` mediumtext DEFAULT NULL,
+  `user_id` int(11) NOT NULL,
+  `original_post_id` int(11) NOT NULL DEFAULT 0,
+  `reply_to_post_id` int(11) NOT NULL DEFAULT 0,
   `date_created` timestamp NOT NULL DEFAULT current_timestamp(),
-  PRIMARY KEY (`tweet_id`),
-  KEY `FK_tweets` (`user_id`),
-  CONSTRAINT `FK_tweets` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=14 DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+  PRIMARY KEY (`post_id`),
+  KEY `FK_follows_from_id_idx` (`user_id`),
+  KEY `FK_follows_to_id_idx` (`user_id`),
+  CONSTRAINT `FK_posts_user_id` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE NO ACTION ON UPDATE NO ACTION
+) ENGINE=InnoDB AUTO_INCREMENT=54 DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Dumping data for table `tweets`
+-- Dumping data for table `posts`
 --
 
-LOCK TABLES `tweets` WRITE;
-/*!40000 ALTER TABLE `tweets` DISABLE KEYS */;
-/*!40000 ALTER TABLE `tweets` ENABLE KEYS */;
+LOCK TABLES `posts` WRITE;
+/*!40000 ALTER TABLE `posts` DISABLE KEYS */;
+/*!40000 ALTER TABLE `posts` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
@@ -114,20 +116,14 @@ CREATE TABLE `users` (
   `user_id` int(11) NOT NULL AUTO_INCREMENT,
   `first_name` varchar(50) NOT NULL,
   `last_name` varchar(50) NOT NULL,
-  `screen_name` varchar(50) NOT NULL,
+  `display_name` varchar(100) NOT NULL,
+  `username` varchar(80) NOT NULL,
   `password` varchar(250) NOT NULL,
-  `address` varchar(200) DEFAULT NULL,
-  `province` varchar(50) DEFAULT NULL,
-  `postal_code` varchar(7) DEFAULT NULL,
-  `contact_number` varchar(25) DEFAULT NULL,
   `email` varchar(100) NOT NULL,
-  `url` varchar(50) DEFAULT NULL,
-  `description` varchar(160) DEFAULT NULL,
-  `location` varchar(50) DEFAULT NULL,
   `date_created` timestamp NOT NULL DEFAULT current_timestamp(),
-  `profile_pic` varchar(200) DEFAULT NULL,
+  `profile_pic` varchar(200) NOT NULL,
   PRIMARY KEY (`user_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=34 DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=39 DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -148,4 +144,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2025-06-21 12:06:00
+-- Dump completed on 2025-07-09 16:44:36

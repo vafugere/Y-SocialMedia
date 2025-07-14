@@ -3,36 +3,32 @@ header('Content-Type: application/json');
 session_start();
 require '../connect.php';
 include '../classes/user.php';
-include '../classes/tweet.php';
+include '../classes/post.php';
 
 $replyInfo = [];
 
-if (isset($_GET['tweet_id'])) {
-    $tweetId = $_GET['tweet_id'];
+if (isset($_GET['post_id'])) {
+    $postId = $_GET['post_id'];
     $userId = $_SESSION['userId'];
-    $replies = Tweet::getReplies($con, $tweetId);
+    $replies = Post::getReplies($con, $postId);
 
     foreach ($replies as $reply) {
         $replyUser = User::getUserById($con, $reply->userId);
+        $isLiked = Post::isLiked($con, $reply->postId, $userId);
         $replyInfo[] = [
             'userId' => $replyUser->userId,
-            'firstName' => $replyUser->firstName,
-            'lastName' => $replyUser->lastName,
+            'displayName' => $replyUser->displayName,
             'username' => $replyUser->username,
             'profilePic' => $replyUser->profilePic,
-            'tweetText' => $reply->tweetText,
+            'postId' => $reply->postId,
+            'postText' => $reply->postText,
             'date' => $reply->getTimeString(),
+            'liked' => $isLiked,
         ];
     }
-
-    $tweet = Tweet::getTweetById($con, $tweetId);
-    $originalUser = User::getUserById($con, $tweet->userId);
-
-    $response = [
-        'username' => $originalUser->username,
-        'userId' => $originalUser->userId,
+    $res = [
         'replyInfo' => $replyInfo
     ];
-
-    echo json_encode($response);
 }
+echo json_encode($res);
+exit;

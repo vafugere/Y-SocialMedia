@@ -3,6 +3,7 @@ class User {
     private $userId;
     private $firstName;
     private $lastName;
+    private $displayName;
     private $username;
     private $password;
     private $email;
@@ -15,26 +16,25 @@ class User {
     public function __set($property, $value) {
         $this->$property = $value;
     }
-    public function __construct($userId, $firstName, $lastName, $username, $password, $email, $date, $profilePic) {
+    public function __construct($userId, $firstName, $lastName, $displayName, $username, $password, $email, $date, $profilePic) {
         $this->userId = $userId;
         $this->firstName = $firstName;
         $this->lastName = $lastName;
+        $this->displayName = $displayName;
         $this->username = $username;
         $this->password = $password;
         $this->email = $email;
         $this->date = $date;
         $this->profilePic = $profilePic;
     }
-    public function fullName() {
-        return $this->firstName . ' ' . $this->lastName;
-    }
     public static function createUser($con, $user) {
         $secure_password = password_hash($user->password, PASSWORD_DEFAULT);
         $defaultPic = 'default_picture.jpg';
+        $displayName = $user->firstName . ' ' . $user->lastName;
         $userId = null;
-        $stmt = $con->prepare('INSERT INTO `users` (`first_name`, `last_name`, `screen_name`, `password`, `email`, `profile_pic`)
-            VALUES (?,?,?,?,?,?)');
-        $stmt->bind_param('ssssss', $user->firstName, $user->lastName, $user->username, $secure_password, $user->email, $defaultPic);
+        $stmt = $con->prepare('INSERT INTO `users` (`first_name`, `last_name`, `display_name`, `username`, `password`, `email`, `profile_pic`)
+            VALUES (?,?,?,?,?,?,?)');
+        $stmt->bind_param('sssssss', $user->firstName, $user->lastName, $displayName, $user->username, $secure_password, $user->email, $defaultPic);
         if ($stmt->execute()) {
             $userId = $con->insert_id;
         }
@@ -50,12 +50,12 @@ class User {
         }
     }
     public static function getLoginCredentials($con, $username) {
-        $stmt = $con->prepare('SELECT user_id, password FROM users WHERE screen_name = ?');
+        $stmt = $con->prepare('SELECT user_id, password FROM users WHERE username = ?');
         $stmt->bind_param('s', $username);
         $stmt->execute();
         $stmt->bind_result($userId, $password);
         if ($stmt->fetch()) {
-            $user = new User($userId, null, null, null, $password, null, null, null);
+            $user = new User($userId, null, null, null, null, $password, null, null, null);
         } else {
             $user = null;
         }
@@ -82,7 +82,7 @@ class User {
     }
     public static function availableUsername($con, $username) {
         $response = false;
-        $stmt = $con->prepare('SELECT user_id FROM users WHERE screen_name = ?');
+        $stmt = $con->prepare('SELECT user_id FROM users WHERE username = ?');
         $stmt->bind_param('s', $username);
         $stmt->execute();
         $result = $stmt->get_result();
@@ -105,12 +105,12 @@ class User {
         return $response;
     }
     public static function getUserById($con, $userId) {
-        $stmt = $con->prepare('SELECT user_id, first_name, last_name, screen_name, email, date_created, profile_pic FROM users WHERE user_id = ?');
+        $stmt = $con->prepare('SELECT user_id, first_name, last_name, display_name, username, email, date_created, profile_pic FROM users WHERE user_id = ?');
         $stmt->bind_param('i', $userId);
         $stmt->execute();
-        $stmt->bind_result($userId, $fname, $lname, $username, $email, $date, $profilePic);
+        $stmt->bind_result($user_id, $fname, $lname, $display_name, $username, $email, $date, $profilePic);
         if ($stmt->fetch()) {
-            $user = new User($userId, $fname, $lname, $username, null, $email, $date, $profilePic);
+            $user = new User($user_id, $fname, $lname, $display_name, $username, null, $email, $date, $profilePic);
         } else {
             $user = null;
             $msg = 'An unexpected error has occured, please sign in again';
@@ -120,23 +120,8 @@ class User {
         $stmt->close();
         return $user;
     }
-    public static function UploadProfilePic($con, $picture, $userId) {
-        $stmt = $con->prepare('UPDATE users SET profile_pic = ? WHERE user_id = ?');
-        $stmt->bind_param('si', $picture, $userId);
-        if ($stmt->execute()) {
-            $stmt->close();
-            User::redirectSuccessful();
-        } else {
-            $stmt->close();
-            User::redirectUnsuccessful();
-        }
-    }
-    public static function displayProfilePic($con, $userId) {
-        $user = User::getUserById($con, $userId);
-        echo '<img class="profilepic" src="images/profilepics/' . $user->profilePic . '">';
-    }
-    public static function countTweets($con, $userId) {
-        $stmt = $con->prepare('SELECT COUNT(*) FROM tweets WHERE user_id = ? AND reply_to_tweet_id = 0');
+    public static function countPosts($con, $userId) {
+        $stmt = $con->prepare('SELECT COUNT(*) FROM posts WHERE user_id = ? AND reply_to_post_id = 0');
         $stmt->bind_param('i', $userId);
         $stmt->execute();
         $stmt->bind_result($count);
@@ -162,47 +147,6 @@ class User {
         $stmt->close();
         return $count;
     }
-    public static function displayUserInfo($con, $userId) {
-        $user = User::getUserById($con, $userId);
-        $countTweets = User::countTweets($con, $userId);
-        $countFollowing = User::countFollowing($con, $userId);
-        $countFollowers = User::countFollowers($con, $userId);
-        $date = date('M d, Y', strtotime($user->date));
-        $loggedUser = $_SESSION['userId'];
-        $isFollowing = User::isFollowing($con, $loggedUser, $user->userId);
-        $followText = ($isFollowing) ? 'Unfollow' : 'Follow';
-
-        echo '
-            <div class="bold">
-                <img class="profile-icon" src="images/profilepics/' . $user->profilePic . '">
-                <a href="userpage.php?user_id=' . $user->userId . '">' . $user->fullName() . '</a><br>
-            </div>
-            <table>
-                <tr>
-                    <td>Tweets</td>
-                    <td>Following</td>
-                    <td>Followers</td>
-                </tr>
-                <tr>
-                    <td>' . $countTweets . '</td>
-                    <td><a href="following.php?user_id=' . $user->userId . '">' . $countFollowing . '</a></td>
-                    <td><a href="followers.php?user_id=' . $user->userId . '">' . $countFollowers . '</a></td>
-                </tr>
-            </table>';
-        if ($userId != $loggedUser) {
-            echo    '
-                    <div class="userpage-follow">
-                        <form action="process/follow_proc.php" method="post">
-                            <input type="hidden" name="user_id" value="' . $user->userId . '">
-                            <input type="submit" class="follow-button" value="' . $followText . '">
-                        </form>
-                    </div>';
-
-        } else {
-            echo    '<div class="label">Member Since:<br>' . $date . '</div>';
-        }
-            
-    }
     public static function isFollowing($con, $fromId, $toId) {
         $stmt = $con->prepare('SELECT follow_id FROM follows WHERE from_id = ? AND to_id = ?');
         $stmt->bind_param('ii', $fromId, $toId);
@@ -217,144 +161,280 @@ class User {
         if ($isFollowing) {
             $stmt = $con->prepare('DELETE FROM follows WHERE from_id = ? AND to_id = ?');
             $stmt->bind_param('ii', $fromId, $toId);
-            $stmt->execute();
+            if (!$stmt->execute()) return false;
             $stmt->close();
         } else {
             $stmt = $con->prepare('INSERT INTO `follows` (`from_id`, `to_id`) VALUES (?,?)');
             $stmt->bind_param('ii', $fromId, $toId);
-            $stmt->execute();
+            if (!$stmt->execute()) return false;
             $stmt->close();
         }
-        User::redirectSuccessful();
+        return true;
     }
-    public static function suggestedUsers($con, $userId) {
-        $stmt = $con->prepare('SELECT user_id, first_name, last_name, screen_name, profile_pic FROM users WHERE user_id != ?
-            AND user_id NOT IN (SELECT to_id FROM follows WHERE from_id = ?) ORDER BY RAND() LIMIT 6');
-        $stmt->bind_param('ii', $userId, $userId);
+    public static function displayTextUser($con, $user) {
+        $loggedUser = $_SESSION['userId'];
+        $isFollowing = self::isFollowing($con, $loggedUser, $user->userId);
+        $followText = ($isFollowing) ? 'Unfollow' : 'Follow';
+        echo    '
+            <div class="content-padding">
+                <div class="flex-row">
+                    <img src="images/profilepics/' . $user->profilePic . '" class="profile-pic">
+                    <div class="flex-column">
+                        <a href="userpage.php?user_id=' . $user->userId . '" class="link-user">@' . $user->username . '</a>
+                        <form method="POST" action="process/follow_proc.php">
+                            <input type="hidden" name="user_id" value="' . $user->userId . '">
+                            <button type="submit" class="link-follow">' . $followText . '</button>
+                        </form>
+                    </div>
+                </div>
+            </div>';
+    }
+    public static function displayUser($con, $user) {
+        $loggedUser = $_SESSION['userId'];
+        $isFollowing = self::isFollowing($con, $loggedUser, $user->userId);
+        $followText = ($isFollowing) ? 'Unfollow' : 'Follow';
+        echo    '
+            <div class="content-padding">
+                <div class="flex-row">
+                    <img src="images/profilepics/' . $user->profilePic . '" class="profile-pic">
+                    <div class="space-between">
+                        <div class="flex-column">
+                            <span class="semi-bold">' . $user->displayName . '</span>
+                            <a href="userpage.php?user_id=' . $user->userId . '" class="link-user">@' . $user->username . '</a>
+                        </div>
+                        <form method="POST" action="process/follow_proc.php">
+                            <input type="hidden" name="user_id" value="' . $user->userId . '">
+                            <input type="submit" value="' . $followText . '" class="btn-follow">
+                        </form>
+                    </div>
+                </div>
+            </div>';
+    }
+    public static function userInfo($con, $userId) {
+        $user = self::getUserById($con, $userId);
+        $loggedUser = $_SESSION['userId'];
+        $postLink = ($loggedUser != $userId) ? "userpage.php?user_id=$userId" : 'index.php';
+        $countPosts = self::countPosts($con, $userId);
+        $countFollowing = self::countFollowing($con, $userId);
+        $countFollowers = self::countFollowers($con, $userId);
+        $date = date('F Y', strtotime($user->date));   
+
+        echo    '
+            <div class="content-padding">
+                <div class="flex-row">
+                    <img src="images/profilepics/' . $user->profilePic . '" class="profile-pic">
+                    <div class="flex-column">
+                        <div class="bold">' . $user->displayName . '</div>
+                        <a href="userpage.php?user_id=' . $user->userId . '" class="link-user">@' . $user->username . '</a>
+                    </div>
+                </div>
+                <div class="profile-info">
+                    <a href="' . $postLink . '" class="info-box">
+                        <span class="info-number">' . $countPosts . '</span>
+                        <span class="info-label">Posts</span>
+                    </a>
+                    <a href="following.php?user_id=' . $user->userId . '" class="info-box">
+                        <span class="info-number">' . $countFollowing . '</span>
+                        <span class="info-label">Following</span>
+                    </a>
+                    <a href="followers.php?user_id=' . $user->userId . '" class="info-box">
+                        <span class="info-number">' . $countFollowers . '</span>
+                        <span class="info-label">Followers</span>
+                    </a>
+                </div>
+                <div class="info-date">
+                    <img src="images/icons/calendar.png"> Joined ' . $date . '
+                </div>
+            </div>';
+        if ($loggedUser == $userId) {
+            echo    '
+                <a href="profile.php" class="nav"><img src="images/icons/edit.png">&nbsp; Edit Profile</a>
+                <a href="logout.php" class="nav nav-last"><img src="images/icons/logout.png">&nbsp; Logout</a>';
+        } else {
+            $isFollowing = self::isFollowing($con, $loggedUser, $userId);
+            $followText = ($isFollowing) ? 'Unfollow' : 'Follow';
+
+            echo    '
+                <div class="flex-center">
+                    <form method="POST" action="process/follow_proc.php">
+                        <input type="hidden" name="user_id" value="' . $user->userId . '">
+                        <input type="submit" value="' . $followText . '" class="btn-follow-profile">
+                    </form>
+                </div>';
+        }
+    }
+    public static function editProfilePreview($con, $userId) {
+        $user = self::getUserById($con, $userId);
+        echo    '
+            <div class="flex-row content-padding">
+                <label for="profile_pic">
+                    <img src="images/profilePics/' . $user->profilePic . '" id="preview" class="pic-preview">
+                </label>
+                <div class="flex-column">
+                    <div class="space-between">
+                        <input type="text" id="name" name="name" class="input-name" placeholder="' . $user->displayName . '" disabled>
+                        <img src="images/icons/edit.png" id="edit_icon" class="edit-icon" alt="edit">
+                    </div>
+                    <span class="username">@' . $user->username . '</span>
+                </div>
+            </div>';
+    }
+    public static function emailForm($con, $userId) {
+        $user = self::getUserById($con, $userId);
+        echo    '
+            <h2>Change Email</h2>
+            <input type="text" id="email" name="email" class="input-edit" placeholder="' . $user->email . '">
+            <span id="error_email"></span>';
+    }
+    public static function validateCurrentPassword($con, $userId, $password) {
+        $res = false;
+        $stmt = $con->prepare('SELECT password FROM users WHERE user_id = ?');
+        $stmt->bind_param('i', $userId);
         $stmt->execute();
-        $stmt->bind_result($user_id, $fname, $lname, $username, $profile_pic);
-        $users = [];
-        while ($stmt->fetch()) {
-            $users[] = new User($user_id, $fname, $lname, $username, null, null, null, $profile_pic);
+        $stmt->bind_result($db_password);
+        if ($stmt->fetch()) {
+            if (password_verify($password, $db_password)) {
+                $res = true;
+            }
         }
         $stmt->close();
-        $count = count($users);
-        foreach ($users as $i => $user) {
-            $isFollowing = User::isFollowing($con, $userId, $user->userId);
-            $followText = ($isFollowing) ? 'Unfollow' : 'Follow';
-            echo '
-                <div class="flex-row">
-                    <img class="profile-icon" src="images/profilepics/' . $user->profilePic . '">
-                        <div>
-                            <a class="bold" href="userpage.php?user_id=' . $user->userId . '"> @' . $user->username . '</a><br>' . $user->fullName() . '
-                            <form action="process/follow_proc.php" method="post">
-                                <input type="hidden" name="user_id" value="' . $user->userId . '">
-                                <input type="submit" class="follow-button" value="' . $followText . '">
-                            </form>
-                        </div>
-                    </div>';
-            if ($i < $count - 1) {
-                echo '<hr>';
-            }
-        }
+        return $res;
     }
-    public static function usersYouFollow($con, $userId) {
-        $stmt = $con->prepare('SELECT user_id, first_name, last_name, screen_name, profile_pic FROM users
-            WHERE user_id IN (SELECT to_id FROM follows WHERE from_id = ?) ORDER BY RAND() LIMIT 3');
-        $stmt->bind_param('i', $userId);
+    public static function UpdateProfilePic($con, $userId, $picture) {
+        $stmt = $con->prepare('UPDATE users SET profile_pic = ? WHERE user_id = ?');
+        $stmt->bind_param('si', $picture, $userId);
+        if (!$stmt->execute()) return false;
+        $stmt->close();
+        return true;
+    }
+    public static function updateDisplayName($con, $userId, $name) {
+        $stmt = $con->prepare('UPDATE users SET display_name = ? WHERE user_id = ?');
+        $stmt->bind_param('si', $name, $userId);
+        if (!$stmt->execute()) return false;
+        $stmt->close();
+        return true;
+    }
+    public static function updateEmail($con, $userId, $email) {
+        $stmt = $con->prepare('UPDATE users SET email = ? WHERE user_id = ?');
+        $stmt->bind_param('si', $email, $userId);
+        if (!$stmt->execute()) return false;
+        $stmt->close();
+        return true;
+    }
+    public static function updatePassword($con, $userId, $password) {
+        $securePassword = password_hash($password, PASSWORD_DEFAULT);
+        $stmt = $con->prepare('UPDATE users SET password = ? WHERE user_id = ?');
+        $stmt->bind_param('si', $securePassword, $userId);
+        if (!$stmt->execute()) return false;
+        $stmt->close();
+        return true;
+    }
+    public static function suggestedUsers($con, $userId) {
+        $stmt = $con->prepare('SELECT user_id, username, profile_pic FROM users WHERE user_id != ?
+            AND user_id NOT IN (SELECT to_id FROM follows WHERE from_id = ?) ORDER BY RAND() LIMIT 8');
+        $stmt->bind_param('ii', $userId, $userId);
         $stmt->execute();
-        $stmt->bind_result($user_id, $fname, $lname, $username, $profile_pic);
+        $stmt->bind_result($user_id, $username, $profile_pic);
         $users = [];
         while ($stmt->fetch()) {
-            $users[] = new User($user_id, $fname, $lname, $username, null, null, null, $profile_pic);
+            $users[] = new User($user_id, null, null, null, $username, null, null, null, $profile_pic);
         }
-        $count = count($users);
-        foreach ($users as $i => $user) {
-            $isFollowing = User::isFollowing($con, $userId, $user->userId);
-            $followText = ($isFollowing) ? 'Unfollow' : 'Follow';
-            echo    '
-                    <div class="flex-row">
-                        <img class="profile-icon" src="images/profilepics/' . $user->profilePic . '">
-                        <div>
-                            <a class="bold" href="userpage.php?user_id=' . $user->userId . '">@' . $user->username . '</a><br>' . $user->fullName() . '
-                            <form action="process/follow_proc.php" method="post">
-                                <input type="hidden" name="user_id" value="' . $user->userId . '">
-                                <input type="submit" class="follow-button" value="' . $followText . '">
-                            </form>
-                        </div>
-                    </div>';
-            if ($i < $count - 1) {
-                echo '<hr>';
+        $stmt->close();
+
+        if (!empty($users)) {
+            $count = count($users);
+
+            echo '<div class="label">Suggested</div>';
+
+            foreach ($users as $i => $user) {
+                self::displayTextUser($con, $user);
+
+                if ($i < $count - 1) {
+                    echo '<hr>';
+                }
             }
         }
     }
-    public static function displayFollowing($con, $userId) {
+    public static function friends($con, $userId) {
+        $stmt = $con->prepare('SELECT u.user_id, u.username, u.profile_pic FROM users u
+            INNER JOIN follows f1 ON f1.to_id = u.user_id AND f1.from_id = ?
+            INNER JOIN follows f2 ON f2.from_id = u.user_id AND f2.to_id = ?
+            ORDER BY first_name ASC');
+        $stmt->bind_param('ii', $userId, $userId);
+        $stmt->execute();
+        $stmt->bind_result($user_id, $username, $profile_pic);
+        $users = [];
+        while ($stmt->fetch()) {
+            $users[] = new User($user_id, null, null, null, $username, null, null, null, $profile_pic);
+        }
+        $stmt->close();
         $loggedUser = $_SESSION['userId'];
-        $stmt = $con->prepare('SELECT user_id, first_name, last_name, screen_name, date_created, profile_pic FROM users
-            WHERE user_id IN (SELECT to_id FROM follows WHERE from_id = ?)');
-        $stmt->bind_param('i', $userId);
-        $stmt->execute();
-        $stmt->bind_result($user_id, $fname, $lname, $username, $date, $profile_pic);
-        $users = [];
-        while ($stmt->fetch()) {
-            $users[] = new User($user_id, $fname, $lname, $username, null, null, null, $profile_pic);
-        }
-        $count = count($users);
-        foreach ($users as $i => $user) {
-            $isFollowing = User::isFollowing($con, $loggedUser, $user->userId);
-            $followText = ($isFollowing) ? 'Unfollow' : 'Follow';
-            echo    '
-                    <div class="flex-row">
-                        <img class="profile-icon" src="images/profilepics/' . $user->profilePic . '">
-                        <div>
-                            <a class="bold" href="userpage.php?user_id=' . $user->userId . '">@' . $user->username . '</a><br>' . $user->fullName() . '
-                            <form action="process/follow_proc.php" method="post">
-                                <input type="hidden" name="user_id" value="' . $user->userId . '">
-                                <input type="submit" class="follow-button" value="' . $followText . '">
-                            </form>
-                        </div>
-                    </div>';
-            if ($i < $count - 1) {
-                echo '<hr>';
+
+        if (!empty($users)) {
+            if ($loggedUser == $userId) {
+                $count = count($users);
+                echo    '
+                    <div class="friends-scroll">
+                        <div class="label">Friends</div>';
+
+                foreach ($users as $i => $user) {
+                    self::displayTextUser($con, $user);
+
+                    if ($i < $count - 1) {
+                        echo '<hr>';
+                    }
+                }
+                echo '</div>';
             }
         }
     }
     public static function displayFollowers($con, $userId) {
-        $loggedUser = $_SESSION['userId'];
-        $stmt = $con->prepare('SELECT user_id, first_name, last_name, screen_name, date_created, profile_pic FROM users
+        $stmt = $con->prepare('SELECT user_id, display_name, username, date_created, profile_pic FROM users
             WHERE user_id IN (SELECT from_id FROM follows WHERE to_id = ?)');
         $stmt->bind_param('i', $userId);
         $stmt->execute();
-        $stmt->bind_result($user_id, $fname, $lname, $username, $date, $profile_pic);
+        $stmt->bind_result($user_id, $display_name, $username, $date, $profile_pic);
         $users = [];
         while ($stmt->fetch()) {
-            $users[] = new User($user_id, $fname, $lname, $username, null, null, null, $profile_pic);
+            $users[] = new User($user_id, null, null, $display_name, $username, null, null, null, $profile_pic);
         }
-        $count = count($users);
-        foreach ($users as $i => $user) {
-            $isFollowing = User::isFollowing($con, $loggedUser, $user->userId);
-            $followText = ($isFollowing) ? 'Unfollow' : 'Follow';
-            echo    '
-                    <div class="flex-row">
-                        <img class="profile-icon" src="images/profilepics/' . $user->profilePic . '">
-                        <div>
-                            <a class="bold" href="userpage.php?user_id=' . $user->userId . '">@' . $user->username . '</a><br>' . $user->fullName() . '
-                            <form action="process/follow_proc.php" method="post">
-                                <input type="hidden" name="user_id" value="' . $user->userId . '">
-                                <input type="submit" class="follow-button" value="' . $followText . '">
-                            </form>
-                        </div>
-                    </div>';
-            if ($i < $count - 1) {
-                echo '<hr>';
+
+        if (!empty($users)) {
+            $count = count($users);
+            foreach ($users as $i => $user) {
+                self::displayUser($con, $user);
+                if ($i < $count -1) {
+                    echo '<hr>';
+                }
             }
         }
     }
-    public static function redirectSuccessful() {
+    public static function displayFollowing($con, $userId) {
+        $stmt = $con->prepare('SELECT user_id, display_name, username, date_created, profile_pic FROM users
+            WHERE user_id IN (SELECT to_id FROM follows WHERE from_id = ?)');
+        $stmt->bind_param('i', $userId);
+        $stmt->execute();
+        $stmt->bind_result($user_id, $display_name, $username, $date, $profile_pic);
+        $users = [];
+        while ($stmt->fetch()) {
+            $users[] = new User($user_id, null, null, $display_name, $username, null, null, null, $profile_pic);
+        }
+
+        if (!empty($users)) {
+            $count = count($users);
+            foreach ($users as $i => $user) {
+                self::displayUser($con, $user);
+                if ($i < $count - 1) {
+                    echo '<hr>';
+                }
+            }
+        }
+    }
+    public static function redirectSuccess() {
         header('Location: ' . $_SERVER['HTTP_REFERER']);
         exit;
     }
-    public static function redirectUnsuccessful() {
+    public static function redirectFail() {
         $msg = 'An unexpected error has occured, please try again';
         if (!empty($_SERVER['HTTP_REFERER'])) {
             $referer = $_SERVER['HTTP_REFERER'];

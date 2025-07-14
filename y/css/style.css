@@ -1,0 +1,426 @@
+body {
+    font-family: 'Segoe UI';
+    background-color: #fafafa;
+    margin: 0;
+}
+.header-container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background-color: #fff;
+    border-bottom: 1px solid #ddd;
+    /* padding: 10px 210px; */
+    padding: 10px 250px 10px 230px;
+    margin: 0;
+}
+.search-form {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0;
+}
+.search-bar {
+    font-size: 1em;
+    padding: 8px 8px 8px 15px;
+    border-top: 2px solid #c084fc;
+    border-bottom: 2px solid #c084fc;
+    border-left: 2px solid #c084fc;
+    border-right: 0;
+    border-radius: 20px 0 0 20px;
+}
+.search-bar:focus {
+    outline: none;
+}
+.btn-search {
+    padding: 5px;
+    background-color: #fff;
+    border-top: 2px solid #c084fc;
+    border-bottom: 2px solid #c084fc;
+    border-right: 2px solid #c084fc;
+    border-left: 0;
+    border-radius: 0 20px 20px 0;
+    width: 40px;
+    height: 37.6px;
+    cursor: pointer;
+}
+.main-container {
+    display: flex;
+    flex-direction: row;
+    gap: 10px;
+    background-color: #fafafa;
+    padding: 10px;
+    margin: 0 200px;
+    height: 100vh;
+}
+.side {
+    flex: 1;
+    background-color: #fff;
+    border-radius: 10px;
+    box-shadow: 0px 1px 2px rgba(0, 0, 0, 0.2);
+    height: 100vh;
+}
+.middle {
+    flex: 2;
+    display: flex;
+    justify-content: center;
+    background-color: #fafafa;
+}
+.content-padding {
+    padding: 10px 10px 10px 20px;
+}
+.flex-column {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+}
+.flex-row {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 10px;
+}
+.space-between {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+}
+.flex-center {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.nav {
+  display: block;
+  padding: 15px 20px;
+  color: #333;
+  text-decoration: none;
+  font-weight: 500;
+  border-top: 1px solid #eee;
+  transition: background 0.2s ease;
+}
+.nav-last {
+    border-bottom: 1px solid #eee;
+}
+.nav:hover {
+  background-color: #f9f9f9; 
+  color: #000;
+  cursor: pointer;
+}
+.profile-pic {
+    width: 40px;
+    height: 40px;
+    border: 3px solid #c084fc;
+    border-radius: 50%;
+}
+.profile-info {
+  display: flex;
+  justify-content: space-around;
+  margin-top: 15px;
+  text-align: center;
+}
+.info-box {
+  display: flex;
+  flex-direction: column;
+  text-decoration: none;
+  color: #333;
+  padding: 10px;
+}
+.info-box:hover {
+  color: #c084fc;
+  cursor: pointer;
+}
+.info-number {
+  font-size: 18px;
+  font-weight: bold;
+}
+.info-label {
+  font-size: 14px;
+  color: inherit;
+}
+.info-date {
+    padding: 5px;
+    margin-top: 20px;
+}
+hr {
+  border: none;
+  border-bottom: 1px solid #eee;
+}
+.label {
+    color: #333;
+    font-weight: 500;
+    border-bottom: 1px solid #eee;
+    padding: 10px;
+}
+.friends-scroll {
+  height: 360px; 
+  overflow-y: auto; 
+  background: #fff; 
+  margin-top: 30px;
+}
+.post-scroll {
+    width: 100%;
+    height: 690px; 
+    overflow-y: auto; 
+    background: #fafafa; 
+}
+.post-background {
+    background-color: #fff;
+    border-radius: 10px;
+    box-shadow: 0px 1px 2px rgba(0, 0, 0, 0.2);
+    margin-bottom: 20px;
+}
+.bold {
+    font-weight: bold;
+}
+.semi-bold {
+    font-weight: 500;
+}
+.icons {
+    display: flex;
+    gap: 20px;
+}
+.icon-size {
+    width: 16px;
+    height: 16px;
+}
+.timestamp {
+    font-size: 0.8em;
+    color: #333;
+    font-weight: 500;
+}
+a.link-user,
+a.link-user:visited,
+a.link-user:active {
+    color: #c084fc;
+    font-weight: 500;
+    text-decoration: none;
+}
+a.link-user:hover {
+    color: #a462e6;
+}
+.link-follow {
+    font-size: 0.9em;
+    color: #333;
+    background-color: #fff;
+    border: 0;
+    cursor: pointer;
+}
+.link-follow:hover {
+    color: #000;
+}
+.input-reply {
+    display: block;
+    font-size: 1em;
+    box-sizing: border-box;
+    background-color: #f4f4f4;
+    border: 1px solid #eee;
+    box-shadow: inset 0 1px 2px rgba(0,0,0,0.05);
+    border-radius: 20px;
+    padding: 8px 8px 8px 15px;
+    margin: 10px auto 0 auto;
+    width: 90%;
+}
+.input-reply:focus {
+    outline: none;
+}
+.btn-reply {
+    font-size: 1em;
+    color: #fff;
+    font-weight: bold;
+    background-color: #c084fc;
+    box-shadow: 0px 1px 2px rgba(0, 0, 0, 0.2);
+    border: 0;
+    border-radius: 20px;
+    padding: 5px 10px 5px 10px;
+    margin: 10px 10px 10px 430px;
+    cursor: pointer;
+}
+.btn-reply:hover {
+    background-color: #a462e6;
+}
+.reply-text {
+    padding: 0 5px 20px 70px;
+}
+.btn-follow-profile {
+    font-size: 1em;
+    color: #fff;
+    font-weight: bold;
+    background-color: #c084fc;
+    border: 0;
+    border-radius: 10px;
+    box-shadow: 0px 1px 2px rgba(0, 0, 0, 0.2);
+    width: 200px;
+    padding: 5px;
+    margin-top: 10px;
+    cursor: pointer;
+}
+.btn-follow:hover {
+    background-color: #a462e6;
+}
+.btn-follow {
+    font-size: 0.9em;
+    color: #fff;
+    font-weight: bold;
+    background-color: #c084fc;
+    border: 0;
+    border-radius: 10px;
+    box-shadow: 0px 1px 2px rgba(0, 0, 0, 0.2);
+    width: 120px;
+    padding: 5px;
+    margin-top: 10px;
+    cursor: pointer;
+}
+.btn-follow:hover {
+    background-color: #a462e6;
+}
+.pic-preview {
+    width: 100px;
+    height: 100px;
+    border: 3px solid #c084fc;
+    border-radius: 50%;
+    cursor: pointer;
+}
+.username {
+    font-size: 1.5em;
+    color: #c084fc;
+}
+.invisible {
+  display: none;
+}
+.input-name {
+    font-size: 1.5em;
+    border: none;
+    background: transparent;
+    width: 100%;
+}
+.input-name::placeholder {
+    color: #000;
+    font-weight: bold;
+}
+.input-name:focus {
+    outline: 0;
+    border-bottom: 2px solid #000;
+}
+.edit-icon {
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+}
+.background-padding {
+    background-color: #fff;
+    border-radius: 10px;
+    box-shadow: 0px 1px 2px rgba(0, 0, 0, 0.2);
+    padding: 10px 10px 20px 10px;
+    margin-bottom: 20px;
+}
+h2 {
+    font-size: 1em;
+    font-weight: 500;
+    padding-left: 30px;
+}
+.input-edit {
+    display: block;
+    font-size: 1em;
+    box-sizing: border-box;
+    background-color: transparent;
+    border: 0;
+    border: 1px solid #eee;
+    padding: 8px 8px 8px 15px;
+    margin: 10px auto 0 auto;
+    width: 90%;
+}
+.input-edit:focus {
+    outline: none;
+}
+.input-edit::placeholder {
+    color: #333;
+}
+.error-text {
+    color: red;
+    padding: 10px 0 5px 30px;
+}
+h1 {
+    color: #c084fc;
+    text-align: center;
+}
+.full-width {
+    width: 100%;
+}
+.form-container {
+    width: 400px;
+    margin: 30px auto 0 auto;
+}
+.input {
+    font-size: 1em;
+    border: 2px solid #c084fc;
+    border-radius: 20px;
+    padding: 10px;
+    box-sizing: border-box;
+    width: 100%;
+}
+.input::placeholder {
+    color: #c084fc;
+}
+.input:focus {
+    outline: none;
+}
+.input-group {
+    position: relative;
+    margin-bottom: 10px;
+}
+.error {
+    border: 2px solid red;
+}
+.error::placeholder {
+    color: red;
+}
+.error-msg {
+    font-size: 0.9em;
+    color: red;
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    left: 100%;
+    margin-left: 10px;
+    white-space: nowrap;  
+}
+.success-msg {
+    font-size: 0.9em;
+    color: #52be80;
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    left: 100%;
+    margin-left: 10px;
+    white-space: nowrap;  
+}
+.btn-submit {
+    font-size: 1em;
+    color: #fff;
+    font-weight: bold;
+    background-color: #c084fc;
+    box-shadow: 0px 1px 2px rgba(0, 0, 0, 0.2);
+    border: 0;
+    border-radius: 20px;
+    padding: 10px;
+    margin-bottom: 10px;
+    box-sizing: border-box;
+    width: 100%;
+    cursor: pointer;
+}
+.btn-submit:hover {
+    background-color: #a462e6;
+}
+a.btn-submit,
+a.btn-submit:active,
+a.btn-submit:visited {
+    font-size: 1em;
+    color: #fff;
+    text-align: center;
+    text-decoration: none;
+}
+
+

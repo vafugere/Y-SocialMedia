@@ -2,15 +2,14 @@
 session_start();
 require 'connect.php';
 include_once 'classes/user.php';
-include_once 'classes/tweet.php';
+include_once 'classes/post.php';
 if (!isset($_SESSION['userId'])) {
-    header('Location: login.php');
-    exit;
+  header('Location: login.php');
+  exit;
 } else {
-    $userId = $_SESSION['userId'];
-    $tweets = Tweet::getTweets($con, $userId);
+  $userId = $_SESSION['userId'];
+  $posts = Post::getPosts($con, $userId);
 }
-# Return message
 if (isset($_GET['message'])) {
     $message = $_GET['message'];
     echo "<script>alert('$message'); window.location.href = 'index.php';</script>";
@@ -19,50 +18,86 @@ if (isset($_GET['message'])) {
 <!DOCTYPE html>
 <html lang="en">
     <head>
-        <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-        <meta name="description" content="Y - Share, like, and create posts with your friends!">
-        <meta name="author" content="Valerie Fugere vafugere@gmail.com">
-        <link rel="icon" href="favicon.ico">
-        <title>Y - Why use X when you can use Y!</title>
-	    <?php include_once('includes/stylesheets.php'); ?>
+      <meta charset="utf-8">
+      <title>Y</title>
+      <link rel="icon" href="favicon.png" type="image/png">
+      <link href="css/quill.snow.css" rel="stylesheet">
+      <link href="css/style.css" rel="stylesheet">
+      <link href="css/quill.css" rel="stylesheet">
     </head>
     <body>
-        <?php include_once('includes/header.php'); ?>
-        <div class="container">
-            <div class="row">
-                <div class="col-md-3">
-                    <div class="mainprofile">
-                        <?php User::displayUserInfo($con, $userId); ?>
-                    </div>
-                    <div class="follow">
-                        <div class="label">Following</div>
-                        <div class="format-follow">
-                            <?php User::usersYouFollow($con, $userId); ?>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-6">
-                    <form id="tweet_form" action="process/tweet_proc.php" method="post">
-                        <div class="group">
-                            <textarea id="my_tweet" name="my_tweet" class="form-control" rows="2" placeholder="What's on your mind?"></textarea>
-                        </div>
-                        <div class="group">
-                            <input type="submit" id="tweet_button" value="Send" class="btn-main">
-                        </div>
-                    </form>
-                    <?php Tweet::displayTweets($con, $tweets) ?>
-                </div>
-                <div class="col-md-3">
-                    <div class="suggested">
-                        <div class="label">Suggested</div>
-                        <?php User::suggestedUsers($con, $userId); ?>
-                    </div>
-                </div>
+      <?php include_once('includes/header.php'); ?>
+        <div class="main-container">
+            <div class="side">
+              <?php User::userInfo($con, $userId); ?>
+              <?php User::friends($con, $userId); ?>
+            </div>
+            <div class="middle">
+              <div class="post-scroll">
+
+                <form id="post_form" method="POST" action="process/post_proc.php">
+                  <div id="toolbar">
+                    <span class="ql-formats">
+                      <button class="ql-bold"></button>
+                      <button class="ql-italic"></button>
+                      <button class="ql-underline"></button>
+                    </span>
+
+                    <span class="ql-formats">
+                      <button class="ql-list" value="ordered"></button>
+                      <button class="ql-list" value="bullet"></button>
+                    </span>
+
+                    <span class="ql-formats">
+                      <select class="ql-align">
+                        <option selected></option>
+                        <option value="center"></option>
+                        <option value="right"></option>
+                        <option value="justify"></option>
+                      </select>
+                    </span>
+
+                    <span class="ql-formats">
+                      <select class="ql-color"></select>
+                    </span>
+
+                    <span class="ql-formats">
+                      <select class="ql-font">
+                        <option selected>Sans Serif</option>
+                        <option value="serif">Serif</option>
+                        <option value="monospace">Monospace</option>
+                        <option value="comic">Comic</option>
+                        <option value="impact">Impact</option>
+                        <option value="brush">Brush Script</option>
+                      </select>
+                    </span>
+
+                    <span class="ql-formats">
+                      <select class="ql-size">
+                        <option value="small">A</option>
+                        <option selected>A</option>
+                        <option value="large">A</option>
+                        <option value="huge">A</option>
+                      </select>
+                    </span>
+
+                  </div>
+                  <div id="editor"></div>
+                  <input type="hidden" name="message" id="hiddenMessage">
+                  <button type="submit" class="btn-post">Post</button>
+                </form>
+
+                <?php Post::displayPosts($con, $posts); ?>
+              </div>
+            </div>
+            <div class="side">
+              <?php User::suggestedUsers($con, $userId); ?>
             </div>
         </div>
-        <?php include_once('includes/scripts.php'); ?>
+        <script src="js/quill.min.js"></script>
+        <script src="js/quill_editor.js"></script>
+        <script src="js/jquery-3.3.1.min.js"></script>
+        <script src="js/posts.js"></script>
+        <script src="js/home-icon.js"></script>
     </body>
 </html>
-
-

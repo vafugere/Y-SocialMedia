@@ -1,22 +1,23 @@
 <?php
 session_start();
+header('Content-Type: application/json');
 require '../connect.php';
-include '../classes/tweet.php';
+include '../classes/post.php';
+
+$res = ['success' => false];
 
 if (isset($_SESSION['userId'])) {
-    if (isset($_GET['tweet_id'])) {
-        $tweetId = $_GET['tweet_id'];
+    if (isset($_POST['post_id'])) {
         $userId = $_SESSION['userId'];
-        Tweet::toggleLike($con, $tweetId, $userId);
-        
-    } else {
-        $msg = 'An unexpected error has occured, please try again';
-        header('Location: ../index.php?message=' . urlencode($msg));
-        exit;
-    }
+        $postId = $_POST['post_id'];
+        Post::toggleLike($con, $postId, $userId);
+        $liked = Post::isLiked($con, $postId, $userId);
 
-} else {
-    $msg = 'An unexpected error has occured, please sign in again';
-    header('Location: ../login.php?message=' . urlencode($msg));
-    exit;
+        $res = [
+            'success' => true,
+            'liked' => $liked
+        ];
+    }
 }
+echo json_encode($res);
+exit;

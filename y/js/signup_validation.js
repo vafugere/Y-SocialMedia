@@ -1,40 +1,36 @@
-const validateSignup = function() {
+function validateSignup() {
     let isValid = true;
     const fname = $('#first_name').val().trim();
     const fnameInput = $('#first_name');
     const fnameError = $('#error_first_name');
-    if (fname === '' || fname.length > 12) {
-        let msg = (fname === '') ? 'First Name is required' : 'First Name cannot exceed 12 characters';
+    if (fname === '' || fname.length > 50) {
+        let msg = (fname === '') ? 'First Name is required' : 'First Name cannot exceed 50 characters';
         fnameInput.addClass('error');
-        fnameError.addClass('error-msg');
-        fnameError.text(msg);
+        fnameError.text(msg).addClass('error-msg');
         isValid = false;
     }
     const lname = $('#last_name').val().trim();
     const lnameInput = $('#last_name');
     const lnameError = $('#error_last_name');
-    if (lname === '' || lname.length > 12) {
-        let msg = (lname === '') ? 'Last Name is required' : 'Last Name cannot exceed 12 characters';
+    if (lname === '' || lname.length > 50) {
+        let msg = (lname === '') ? 'Last Name is required' : 'Last Name cannot exceed 50 characters';
         lnameInput.addClass('error');
-        lnameError.addClass('error-msg');
-        lnameError.text(msg);
+        lnameError.text(msg).addClass('error-msg');
         isValid = false;
     }
     const email = $('#email').val().trim();
     const emailInput = $('#email');
     const emailError = $('#error_email');
     const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (email === '' || email.length > 100) {
-        let msg = (email === '') ? 'Email is required' : 'Email cannot exceed 100 characters';
+    if (email === '' || email.length > 250) {
+        let msg = (email === '') ? 'Email is required' : 'Email cannot exceed 250 characters';
         emailInput.addClass('error');
-        emailError.addClass('error-msg');
-        emailError.text(msg);
+        emailError.text(msg).addClass('error-msg');
         isValid = false;
     } else if (!emailPattern.test(email)) {
         let msg = 'Please use correct email format: example@domain.com';
         emailInput.addClass('error');
-        emailError.addClass('error-msg');
-        emailError.text(msg);
+        emailError.text(msg).addClass('error-msg');
         isValid = false;
     }
     const confirmEmail = $('#confirm_email').val().trim();
@@ -43,28 +39,25 @@ const validateSignup = function() {
     if (confirmEmail !== email) {
         let msg = 'Email does not match';
         confirmEmailInput.addClass('error');
-        confirmEmailError.addClass('error-msg');
-        confirmEmailError.text(msg);
+        confirmEmailError.text(msg).addClass('error-msg');
         isValid = false;
     }
     const username = $('#username').val().trim();
     const usernameInput = $('#username');
     const usernameError = $('#error_username');
-    if (username === '' || username.length > 10) {
-        let msg = (username === '') ? 'Username is required' : 'Username cannot exceed 10 characters';
+    if (username === '' || username.length > 80) {
+        let msg = (username === '') ? 'Username is required' : 'Username cannot exceed 80 characters';
         usernameInput.addClass('error');
-        usernameError.addClass('error-msg');
-        usernameError.text(msg);
+        usernameError.text(msg).addClass('error-msg');
         isValid = false;
     }
     const password = $('#password').val().trim();
     const passwordInput = $('#password');
     const passwordError = $('#error_password');
-    if (password.length < 5 || password.length > 100) {
-        let msg = (password.length < 5) ? 'Password must be longer than 4 characters' : 'Password cannot exceed 100 characters';
+    if (password.length < 5 || password.length > 250) {
+        let msg = (password.length < 5) ? 'Password must be longer than 4 characters' : 'Password cannot exceed 250 characters';
         passwordInput.addClass('error');
-        passwordError.addClass('error-msg');
-        passwordError.text(msg);
+        passwordError.text(msg).addClass('error-msg');
         isValid = false;
     }
     const confirmPassword = $('#confirm_password').val().trim();
@@ -73,13 +66,11 @@ const validateSignup = function() {
     if (confirmPassword !== password) {
         let msg = 'Password does not match';
         confirmPasswordInput.addClass('error');
-        confirmPasswordError.addClass('error-msg');
-        confirmPasswordError.text(msg);
+        confirmPasswordError.text(msg).addClass('error-msg');
         isValid = false;
     }
     return isValid;
 }
-
 function availableEmail(email) {
     fetch('includes/fetch_email.php?email=' + encodeURIComponent(email))
         .then(response => response.json())
@@ -90,12 +81,11 @@ function availableEmail(email) {
         })
         .catch(error => console.log('Error ', error));
 }
-
 function availableUsername(username) {
     fetch('includes/fetch_username.php?username=' + encodeURIComponent(username))
         .then(response => response.json())
         .then(data => {
-            $('#error_username').text(data.available ? 'Username is available!' : 'Username is not available');
+            $('#error_username').text(data.available ? 'This username is available!' : 'This username is not available');
             if (!data.available) {
                 $('#error_username').removeClass('success-msg').addClass('error-msg');
             } else {
@@ -106,7 +96,6 @@ function availableUsername(username) {
 }
 
 $(document).ready(function () {
-
     $('#email').on('input', function () {
         const email = $(this).val().trim();
         if (email.length > 0) {
